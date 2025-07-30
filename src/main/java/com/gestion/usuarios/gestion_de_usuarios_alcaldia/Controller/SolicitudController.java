@@ -1,0 +1,51 @@
+package com.gestion.usuarios.gestion_de_usuarios_alcaldia.Controller;
+
+import org.springframework.web.bind.annotation.*;
+
+import com.gestion.usuarios.gestion_de_usuarios_alcaldia.entities.Solicitud;
+import com.gestion.usuarios.gestion_de_usuarios_alcaldia.repository.SolicitudRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+
+@RestController
+@RequestMapping("/api/solicitudes")
+@CrossOrigin(origins = "*")
+public class SolicitudController {
+
+    @Autowired
+    private SolicitudRepository repo;
+
+    @GetMapping
+    public List<Solicitud> getAll(@RequestParam(required = false) Boolean estado) {
+        return (estado != null)
+                ? repo.findByCuentaCreada(estado)
+                : repo.findAll();
+    }
+
+    @PostMapping
+    public Solicitud crear(@RequestBody Solicitud solicitud) {
+        if (Boolean.TRUE.equals(solicitud.isVinculado())) {
+            solicitud.setFechaInicioContrato(null);
+            solicitud.setFechaFinContrato(null);
+        }
+        return repo.save(solicitud);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Solicitud> marcarCreada(@PathVariable Long id) {
+        Optional<Solicitud> opt = repo.findById(id);
+        if (opt.isPresent()) {
+            Solicitud s = opt.get();
+            s.setCuentaCreada(true);
+            return ResponseEntity.ok(repo.save(s));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    
+
+}
