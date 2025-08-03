@@ -27,12 +27,20 @@ public class SolicitudController {
     }
 
     @PostMapping
-    public Solicitud crear(@RequestBody Solicitud solicitud) {
+    public ResponseEntity<?> crear(@RequestBody Solicitud solicitud) {
+        // Verifica si ya existe una solicitud con la misma cédula
+        Optional<Solicitud> existente = repo.findByCedula(solicitud.getCedula());
+        if (existente.isPresent()) {
+            return ResponseEntity.badRequest().body("Ya existe una solicitud con esa cédula");
+        }
+
         if (Boolean.TRUE.equals(solicitud.isVinculado())) {
             solicitud.setFechaInicioContrato(null);
             solicitud.setFechaFinContrato(null);
         }
-        return repo.save(solicitud);
+
+        Solicitud nuevaSolicitud = repo.save(solicitud);
+        return ResponseEntity.ok(nuevaSolicitud);
     }
 
     @PutMapping("/{id}")
@@ -45,7 +53,4 @@ public class SolicitudController {
         }
         return ResponseEntity.notFound().build();
     }
-
-    
-
 }
